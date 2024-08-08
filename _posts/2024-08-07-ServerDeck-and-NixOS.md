@@ -47,9 +47,9 @@ Installing *zsh* with [Oh My Zsh](https://ohmyz.sh/) on both machines helped alo
 
 Sometimes the boot up freezes and so occasionally I have to go into the BIOS, reselect the UEFI, then to the boot menu to load Ubuntu Server. Although weirdly, this issue has become less frequent if I let the deck run idle upon successfull bootup.
 
-Originally, I wanted this to act like a portable workstation to tinker with embedded systems. I experimented with [libFTDI](https://www.intra2net.com/en/developer/libftdi/index.php) with the [Adafruit FT232H Breakout](https://learn.adafruit.com/adafruit-ft232h-breakout). This video just demonstrates a simple blink program written in C.
+Originally, I wanted this to act like a portable workstation to tinker with embedded systems. I experimented with [libFTDI](https://www.intra2net.com/en/developer/libftdi/index.php) with the [Adafruit FT232H Breakout](https://learn.adafruit.com/adafruit-ft232h-breakout). This image is a simple blink program written in C.
 
-![ServerDeck Demo](../assets/img/serverdeck_and_nixos/serverdeck-experiment.gif)
+![ServerDeck Demo](../assets/img/serverdeck_and_nixos/serverdeck-experiment.png)
 
 I've also tried working with [LibMPSSE](https://ftdichip.com/software-examples/mpsse-projects/) with the [Adafruit PCA9685](https://learn.adafruit.com/16-channel-pwm-servo-driver) but the overall documentation and resources seem to be a bit abstract and I wasn't able to find others working with it. I could just use **Python** but my focus was **learning C**. 
 
