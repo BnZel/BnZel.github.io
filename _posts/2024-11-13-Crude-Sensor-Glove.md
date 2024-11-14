@@ -36,11 +36,14 @@ The **I2C OLED** is for showing pressure sensor values:
 * X3 is ring finger
 * Y0 is pinky
 
-This will make sense for the code below.
+(This will make sense for the code below)
 
+Here is the entire glove fully assembled:
+
+![glove picture](../assets/img/crude_sensor_glove/prototype_glove.jpg)
+<sub>(yes I wrapped electrical tape around my fingers and wrist to secure the glove)</sub>
 
 Before coding, I'll list the libraries I used:
-Libraries used:
 * [Adafruit_MPU6050](https://github.com/adafruit/Adafruit_MPU6050)
 * [UG82](https://github.com/olikraus/u8g2)
 * [HC595](https://github.com/johnnyb/Shifty)
