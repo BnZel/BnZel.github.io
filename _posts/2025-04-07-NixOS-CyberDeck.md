@@ -9,19 +9,21 @@ comments: true
 mathjax: true
 ---
 
+Back with another Cyberdeck post!
+
+### Obsession Much?
+I won't argue with that... But because of its compact size, I can't help but tinker and build more upon it!
+
+A few (maybe alot) has changed. For one, the idea of using my ***ServerDeck*** as my go to has switched to using my ***Nix-Stick*** <sub>(new name change..)</sub>. This change was due to easier package and environment control, which will be needed when I bring this to do some field testing. More will be explained later.
+
+### What Does It Look Like?
+![breadboard prototyping](../assets/img/nixos_cyberdeck/breadboard_prototype.jpg)
+
+#### In Action
 <video width="900" height="1600" controls>
   <source src="{{ '../assets/img/nixos_cyberdeck/demo-nixos-cyberdeck.mp4' | relative_url }}" type="video/mp4">
 </video>
 
-Back with another Cyberdeck post!
-
-### Obession Much?
-I won't argue with that... But because of its compact size, I can't help but tinker and build more upon it!
-
-A few (maybe alot?) has changed. For one, the idea of using my ***ServerDeck*** as my go to has switched to using my ***Nix-Stick*** <sub>(new name change..)</sub>. This change was due to easier package and environment control, which will be needed when I bring this to do some field testing. More will be explained later.
-
-### What Does It Look Like?
-![breadboard prototyping](../assets/img/nixos_cyberdeck/breadboard_prototype.jpg)
 
 Yep, it's a total mess... Let's start breaking down what I have:
 
@@ -33,8 +35,8 @@ Yep, it's a total mess... Let's start breaking down what I have:
 - **[AdaFruit FT232H (USB-C)](https://learn.adafruit.com/adafruit-ft232h-breakout)**
 - FTDI **FT232RL** USB to TTL adapter
 - USB Hubs:
-    - Orico 3 port with Ethernet connector
-    - Unitek 4 port
+    - **[Orico 3x USB 3.0 port with Gigabit Ethernet Adapter](https://www.orico.cc/usmobile/product/detail/id/3306)**
+    - **[Unitek 4x USB 3.0 port with USB-C Power Port](https://www.unitek-products.com/products/uhub-q4-4-ports-powered-usb-c-hub-with-usb-c-power-port?keyword=4%20port)**
 
 **Breadboard setup:**
 - Displays: 
@@ -44,8 +46,8 @@ Yep, it's a total mess... Let's start breaking down what I have:
 - **[BME280](https://www.bosch-sensortec.com/products/environmental-sensors/humidity-sensors-bme280/)** (Barometric sensor)
 - **[AdaFruit Ultimate GPS V3](https://learn.adafruit.com/adafruit-ultimate-gps)**
 - Shift Registers:
-    - 74HC595
-    - 74HC165
+    - **[74HC595](https://learn.adafruit.com/74hc595/overview)**
+    - **[74HC165](https://dronebotworkshop.com/shift-registers/#Extra_Input_Ports_with_the_74HC165)**
 - 10K potentiometer
 - Mini SPST Switch
 
@@ -56,115 +58,11 @@ Guess where the computer is!
 ### Software
 In a [previous post](https://bnzel.github.io/2024-08-07-ServerDeck-and-NixOS/) when I was just focusing on my ***ServerDeck***, I opted to use **[LibMPSSE](https://ftdichip.com/software-examples/mpsse-projects/libmpsse-spi-examples/)** that's in C. I mentioned the documentation being a bit difficult to grasp and so this time I went with **[Adafruit_Blinka](https://github.com/adafruit/Adafruit_Blinka)** that's written in Python. There's alot of [examples and tutorials](https://learn.adafruit.com/circuitpython-on-raspberrypi-linux) from Adafruit themselves that it's easier to get things tested!
 
-What's driving the whole circuit is the **[FT232H](https://learn.adafruit.com/circuitpython-on-any-computer-with-ft232h)**. Currently I am using the **GC9A01** to display stats from the **BME280**, **ST7789** is taking the computer's: Hostname, CPU Temp, CPU Load, and Memory Usage. Finally the **16x2 LCD** is connected to the **74HC595** for extra outputs, showing longitude and latitude (datetime is separate) from **AdaFruit Ultimate GPS V3**, it is showing zeroes because you'll have to be outside for it to work.
+What's driving the whole circuit is the **[FT232H](https://learn.adafruit.com/circuitpython-on-any-computer-with-ft232h)**. Currently I am using the **GC9A01** to display stats from the **BME280**, **ST7789** is taking the computer's: Hostname, CPU Temp, CPU Load, and Memory Usage. Finally the **16x2 LCD** *(potentiometer is used to adjust the backlight)* is connected to the **74HC595** for extra outputs, showing longitude and latitude *(datetime is separate)* from **AdaFruit Ultimate GPS V3**, it is showing zeroes because you'll have to be outside in order for it to work. I haven't used the **74HC165** yet.
 
-#### Of Course There's Trouble...
-There is a forum discussing [how difficult it is to use Python in NixOS](https://discourse.nixos.org/t/why-is-it-so-hard-to-use-a-python-package/19200/3) due to the way how regular Linux Distro's link C++ .so files. Luckily there was a script I found in the **[GitHub documentation](https://github.com/NixOS/nixpkgs/blob/49829a9adedc4d2c1581cc9a4294ecdbff32d993/doc/languages-frameworks/python.section.md#how-to-consume-python-modules-using-pip-in-a-virtual-environment-like-i-am-used-to-on-other-operating-systems-how-to-consume-python-modules-using-pip-in-a-virtual-environment-like-i-am-used-to-on-other-operating-systems)** that I modified for my needs. Here's mine:
+The **mini SPST switch** is used to switch over to start webcam streaming **(OpenCV)**, a red LED is just for indication. The green and blue LEDs are to test if there's voltage across connecting breadboards.
 
-#### default.nix
-```
-with import <nixpkgs> { };
-
-let
-  pythonPackages = python3Packages;
-in pkgs.mkShell rec {
-  name = "impurePythonEnv";
-  venvDir = "./.venv";
-  buildInputs = [
-    # A Python interpreter including the 'venv' module is required to bootstrap
-    # the environment.
-    pythonPackages.python
-
-    # This execute some shell code to initialize a venv in $venvDir before
-    # dropping into the shell
-    pythonPackages.venvShellHook
-
-    # Those are dependencies that we would like to use from nixpkgs, which will
-    # add them to PYTHONPATH and thus make them accessible from within the venv.
-    pythonPackages.numpy
-    pythonPackages.requests
-    pythonPackages.pyftdi
-  
-    # In this particular example, in order to compile any binary extensions they may
-    # require, the Python modules listed in the hypothetical requirements.txt need
-    # the following packages to be installed locally:
-    libusb1
-   ];
-
-  # Run this command, only after creating the virtual environment
-#  postVenvCreation = ''
-#    unset SOURCE_DATE_EPOCH
-#    pip install -r requirements.txt
-#  '';
-
- packages = [ pkgs.screen ];
-
-# For linking OpenCV libraries
- LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.stdenv.cc.cc ];
-
- shellHook = ''
-   alias c="clear"
-   alias h="history -c"
-   alias la="ls -la"
-   
-   source .venv/bin/activate
-   which python3
-   python3 sanity_test.py
-  # python3 blink_test.py
-   ls /dev/ttyUSB*
-   ls /dev/video*
- '';
-
-
-  # Now we can execute any commands within the virtual environment.
-  # This is optional and can be left out to run pip manually.
-  postShellHook = ''
-    # allow pip to install wheels
-    unset SOURCE_DATE_EPOCH
-    BLINKA_FT232H=1
-  '';
-
-}
-```
-#### requirements.txt
-```
-Adafruit-Blinka==8.56.0
-adafruit-blinka-displayio==2.1.7
-adafruit-circuitpython-74hc595==1.4.6
-adafruit-circuitpython-bitmap_font==2.2.0
-adafruit-circuitpython-bmp280==3.3.6
-adafruit-circuitpython-busdevice==5.2.11
-adafruit-circuitpython-charlcd==3.5.1
-adafruit-circuitpython-connectionmanager==3.1.3
-adafruit-circuitpython-framebuf==1.6.7
-adafruit-circuitpython-mcp230xx==2.5.16
-adafruit-circuitpython-register==1.10.2
-adafruit-circuitpython-requests==4.1.10
-adafruit-circuitpython-rgb-display==3.13
-adafruit-circuitpython-ticks==1.1.2
-adafruit-circuitpython-typing==1.11.2
-Adafruit-PlatformDetect==3.77.0
-Adafruit-PureIO==1.1.11
-binho-host-adapter==0.1.6
-brotlicffi==1.1.0.0
-certifi==2024.8.30
-cffi==1.17.1
-charset-normalizer==3.3.2
-idna==3.10
-numpy==1.26.4
-opencv-python-headless==4.11.0.86
-pillow==11.1.0
-pycparser==2.22
-pyftdi==0.55.4
-pynmea2==1.19.0
-pyserial==3.5
-pyusb==1.2.1
-requests==2.32.3
-sysv_ipc==1.1.0
-typing_extensions==4.12.2
-urllib3==2.2.3
-woolseyworkshop-circuitpython-74hc165==1.0.0
-```
+Here's the code that drives this circuit:
 #### main.py:
 ```python
 import board
@@ -399,5 +297,119 @@ if __name__ == "__main__":
         print("\nCancelled...")
 ```
 
+#### Of Course There's Trouble...
+There is a forum discussing [how difficult it is to use Python in NixOS](https://discourse.nixos.org/t/why-is-it-so-hard-to-use-a-python-package/19200/3) due to the way how regular Linux Distro's link C++ .so files. Luckily there was a script I found in the **[GitHub documentation](https://github.com/NixOS/nixpkgs/blob/49829a9adedc4d2c1581cc9a4294ecdbff32d993/doc/languages-frameworks/python.section.md#how-to-consume-python-modules-using-pip-in-a-virtual-environment-like-i-am-used-to-on-other-operating-systems-how-to-consume-python-modules-using-pip-in-a-virtual-environment-like-i-am-used-to-on-other-operating-systems)** that I modified for my needs:
+
+#### default.nix
+```
+with import <nixpkgs> { };
+
+let
+  pythonPackages = python3Packages;
+in pkgs.mkShell rec {
+  name = "impurePythonEnv";
+  venvDir = "./.venv";
+  buildInputs = [
+    # A Python interpreter including the 'venv' module is required to bootstrap
+    # the environment.
+    pythonPackages.python
+
+    # This execute some shell code to initialize a venv in $venvDir before
+    # dropping into the shell
+    pythonPackages.venvShellHook
+
+    # Those are dependencies that we would like to use from nixpkgs, which will
+    # add them to PYTHONPATH and thus make them accessible from within the venv.
+    pythonPackages.numpy
+    pythonPackages.requests
+    pythonPackages.pyftdi
+  
+    # In this particular example, in order to compile any binary extensions they may
+    # require, the Python modules listed in the hypothetical requirements.txt need
+    # the following packages to be installed locally:
+    libusb1
+   ];
+
+  # Run this command, only after creating the virtual environment
+#  postVenvCreation = ''
+#    unset SOURCE_DATE_EPOCH
+#    pip install -r requirements.txt
+#  '';
+
+ packages = [ pkgs.screen ];
+
+# For linking OpenCV libraries
+ LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.stdenv.cc.cc ];
+
+ shellHook = ''
+   alias c="clear"
+   alias h="history -c"
+   alias la="ls -la"
+   
+   source .venv/bin/activate
+   which python3
+   python3 sanity_test.py
+  # python3 blink_test.py
+   ls /dev/ttyUSB*
+   ls /dev/video*
+ '';
+
+
+  # Now we can execute any commands within the virtual environment.
+  # This is optional and can be left out to run pip manually.
+  postShellHook = ''
+    # allow pip to install wheels
+    unset SOURCE_DATE_EPOCH
+    BLINKA_FT232H=1
+  '';
+
+}
+```
+
+Since this environment relies on the PIP package, the following is the libraries I've used:
+
+#### requirements.txt
+```
+Adafruit-Blinka==8.56.0
+adafruit-blinka-displayio==2.1.7
+adafruit-circuitpython-74hc595==1.4.6
+adafruit-circuitpython-bitmap_font==2.2.0
+adafruit-circuitpython-bmp280==3.3.6
+adafruit-circuitpython-busdevice==5.2.11
+adafruit-circuitpython-charlcd==3.5.1
+adafruit-circuitpython-connectionmanager==3.1.3
+adafruit-circuitpython-framebuf==1.6.7
+adafruit-circuitpython-mcp230xx==2.5.16
+adafruit-circuitpython-register==1.10.2
+adafruit-circuitpython-requests==4.1.10
+adafruit-circuitpython-rgb-display==3.13
+adafruit-circuitpython-ticks==1.1.2
+adafruit-circuitpython-typing==1.11.2
+Adafruit-PlatformDetect==3.77.0
+Adafruit-PureIO==1.1.11
+binho-host-adapter==0.1.6
+brotlicffi==1.1.0.0
+certifi==2024.8.30
+cffi==1.17.1
+charset-normalizer==3.3.2
+idna==3.10
+numpy==1.26.4
+opencv-python-headless==4.11.0.86
+pillow==11.1.0
+pycparser==2.22
+pyftdi==0.55.4
+pynmea2==1.19.0
+pyserial==3.5
+pyusb==1.2.1
+requests==2.32.3
+sysv_ipc==1.1.0
+typing_extensions==4.12.2
+urllib3==2.2.3
+woolseyworkshop-circuitpython-74hc165==1.0.0
+```
+
+### Wait, What About Your ServerDeck?
+Don't worry, it's still up and running! I probably might use this to handle whatever incoming data ***Nix-Stick*** is processing through the USBs Ethernet adapter like I had [before](https://bnzel.github.io/2024-08-03-Intel-Compute-Sticks/).
+
 ### So What Now?
-Hmm.... More prototyping? Get this outside? Stay tuned!
+Hmm.... More prototyping? Get this outside? There's plenty of things to do with this Compute Stick and frankly I am suprised it's able to handle a lot.
