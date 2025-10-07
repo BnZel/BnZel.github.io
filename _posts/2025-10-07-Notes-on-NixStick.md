@@ -21,7 +21,7 @@ The most important are the software and hardware architecture block diagrams as 
 
 Here is how I jot down my thought process. The hardware (red) that is running the cyberdeck and what software (green) is supporting it. The **"CYBERDECK BUILD (NIXOS 24.05)"** block references the schematic I recently revised. 
 
-If you recall the **[ESP32 glove (Sensor Glove V2)](../_posts/2025-07-10-Sensor-Glove-V2.md)** block, I ported the **TCP C server code** to the cyberdeck. Right now there isn't any updates to this but I will return to it soon!
+If you recall the **[ESP32 glove (Sensor Glove V2)](https://bnzel.github.io/2025-07-10-Sensor-Glove-V2/)** block, I ported the **TCP C server code** to the cyberdeck. Right now there isn't any updates to this but I will return to it soon!
 
 Here's the redrawn schematic:
 
